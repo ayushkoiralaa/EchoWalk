@@ -1,29 +1,8 @@
-// ============================================================
-//  AreaDiscovery.cs  —  EchoWalk  —  Unity 6000.0.58f2
-// ============================================================
-//  Two scripts in one file:
-//    1. AreaDiscoveryManager  — tracks total progress, updates HUD, shows popup
-//    2. DiscoverableArea      — attach to each trigger zone in the scene
-//
-//  SETUP:
-//   1. Create an empty GameObject "DiscoveryManager", attach AreaDiscoveryManager
-//   2. Assign the HUD label (e.g. "Places Discovered: 0/7") and the completion popup
-//   3. For each area in your scene:
-//        - Create an empty GameObject, position it at that area
-//        - Add a Sphere Collider, check "Is Trigger", set Radius to taste
-//        - Attach DiscoverableArea
-//        - Give it a name (e.g. "Main Entrance", "Top Balcony")
-//        - Drag DiscoveryManager into the Manager field
-// ============================================================
-
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  MANAGER  —  attach to one empty GameObject in the scene
-// ─────────────────────────────────────────────────────────────────────────────
 
 public class AreaDiscoveryManager : MonoBehaviour
 {
@@ -144,53 +123,3 @@ public class AreaDiscoveryManager : MonoBehaviour
     }
 }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  DISCOVERABLE AREA  —  attach to each trigger zone in the scene
-// ─────────────────────────────────────────────────────────────────────────────
-
-public class DiscoverableArea : MonoBehaviour
-{
-    [Header("Area Info")]
-    [Tooltip("Name shown on screen when this area is discovered, e.g. 'Main Entrance'.")]
-    public string areaName = "Main Entrance";
-
-    [Header("Manager")]
-    [Tooltip("Drag the DiscoveryManager GameObject here.")]
-    public AreaDiscoveryManager manager;
-
-    // ── State ─────────────────────────────────────────────────────────────────
-
-    private bool _discovered = false;
-
-    // ── Trigger ───────────────────────────────────────────────────────────────
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (_discovered || !other.CompareTag("Player")) return;
-
-        _discovered = true;
-
-        // Try assigned manager first, then fall back to singleton
-        AreaDiscoveryManager mgr = manager != null ? manager : AreaDiscoveryManager.Instance;
-
-        if (mgr != null)
-            mgr.RegisterDiscovery(areaName);
-        else
-            Debug.LogWarning($"[DiscoverableArea] '{areaName}' could not find AreaDiscoveryManager.");
-    }
-
-    // ── Editor visualisation ──────────────────────────────────────────────────
-
-    void OnDrawGizmosSelected()
-    {
-        Collider col = GetComponent<Collider>();
-        if (col == null) return;
-
-        Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.3f);
-        if (col is SphereCollider sc)
-            Gizmos.DrawWireSphere(transform.position, sc.radius);
-        else
-            Gizmos.DrawWireCube(col.bounds.center, col.bounds.size);
-    }
-}
