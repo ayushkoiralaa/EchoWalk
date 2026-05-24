@@ -91,9 +91,9 @@ public class AreaDiscoveryManager : MonoBehaviour
 
         if (completionText != null)
             completionText.text =
-                "🏆  You've explored all areas!\n\n" +
-                "Thank you for walking through the story of Dharahara.\n" +
-                "Its legacy lives on.";
+     "\n\n\n\n\n<size=35>  You've explored all areas!</size>\n\n" +
+     "Thank you for playing EchoWalk.\n\n" +
+     "<size=35>Thank you for walking through\nthe story of Dharahara.\nIts legacy lives on.</size>";
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
