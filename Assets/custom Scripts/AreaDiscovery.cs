@@ -77,7 +77,7 @@ public class AreaDiscoveryManager : MonoBehaviour
 
     IEnumerator HideIndicatorAfterDelay(string areaName)
     {
-        areaIndicatorText.text = $"📍  {areaName}";
+        areaIndicatorText.text = $"  {areaName}";
         areaIndicatorText.gameObject.SetActive(true);
         yield return new WaitForSeconds(indicatorDuration);
         areaIndicatorText.gameObject.SetActive(false);
