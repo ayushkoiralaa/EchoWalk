@@ -38,11 +38,8 @@ public class NPCSpeech : MonoBehaviour
     public Button bubbleCloseButton;
 
     [Header("Location Image UI")]
-    [Tooltip("Drag the LocationImage UI Image component here.")]
     public Image bubbleLocationImage;
-    [Tooltip("Drag the LocationCaption TMP here.")]
     public TextMeshProUGUI bubbleLocationCaption;
-    [Tooltip("Parent GameObject holding LocationImage and LocationCaption.")]
     public GameObject locationImageSection;
 
     [Header("Interaction Prompt")]
@@ -65,8 +62,19 @@ public class NPCSpeech : MonoBehaviour
     void Update()
     {
         HandlePrompt();
+
+        // E key — open if not open, close if already open
         if (Input.GetKeyDown(KeyCode.E))
-            TrySpeak();
+        {
+            if (_open)
+                CloseBubble();
+            else
+                TrySpeak();
+        }
+
+        // Escape key — always closes if open
+        if (Input.GetKeyDown(KeyCode.Escape) && _open)
+            CloseBubble();
     }
 
     void HandlePrompt()
@@ -101,12 +109,10 @@ public class NPCSpeech : MonoBehaviour
         if (bubbleSpeakerRole != null) bubbleSpeakerRole.text = speakerRole;
         if (bubbleQuoteText != null) bubbleQuoteText.text = $"\"{quote}\"";
 
-        // Portrait (optional)
         bool hasPortrait = portrait != null;
         if (portraitObj != null) portraitObj.SetActive(hasPortrait);
         if (hasPortrait && bubblePortrait != null) bubblePortrait.sprite = portrait;
 
-        // Location image (optional)
         bool hasLocationImage = locationImage != null;
         if (locationImageSection != null) locationImageSection.SetActive(hasLocationImage);
         if (hasLocationImage)

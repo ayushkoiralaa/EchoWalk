@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class StartScreen : MonoBehaviour
@@ -11,46 +12,72 @@ public class StartScreen : MonoBehaviour
     [Tooltip("The 'Begin Exploration' button.")]
     public Button startButton;
 
+    private bool _gameStarted = false;
+
     void Start()
     {
         if (startPanel != null) startPanel.SetActive(true);
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
         DisableMovement(true);
+
         if (startButton != null)
             startButton.onClick.AddListener(OnStartClicked);
     }
 
+    void Update()
+    {
+        // If game hasn't started yet, keep cursor unlocked always
+        // This handles screen resize resetting cursor state
+        if (!_gameStarted)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+    }
+
     void OnStartClicked()
     {
+        if (_gameStarted) return; // prevent double firing
+        _gameStarted = true;
+
         if (startPanel != null) startPanel.SetActive(false);
+
         DisableMovement(false);
-        StartCoroutine(LockCursorNextFrame()); // FIX: wait 2 frames before locking
+
+        StartCoroutine(LockCursorNextFrame());
+
         if (MusicManager.Instance != null)
             MusicManager.Instance.OnGameStart();
     }
 
     IEnumerator LockCursorNextFrame()
     {
-        yield return null; // wait frame 1
-        yield return null; // wait frame 2
+        // Wait extra frames to let button click and any
+        // screen resize events fully finish before locking
+        yield return null;
+        yield return null;
+        yield return null;
+
+        // Force EventSystem to clear any lingering selection
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     void DisableMovement(bool disable)
     {
-        // Finds every MonoBehaviour on any object with "Camera" or "Player"
-        // in its name and enables/disables it — skips this script itself
         MonoBehaviour[] all = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
         foreach (MonoBehaviour mb in all)
         {
             if (mb == this) continue;
             string n = mb.gameObject.name;
             if (n.Contains("Camera") || n.Contains("Player") || n.Contains("Follow"))
-            {
                 mb.enabled = !disable;
-            }
         }
     }
 }
