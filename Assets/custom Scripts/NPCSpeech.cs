@@ -5,8 +5,6 @@ using System.Collections;
 
 public class NPCSpeech : MonoBehaviour
 {
-    // ── NPC content ───────────────────────────────────────────────────────────
-
     [Header("NPC Info")]
     public string speakerName = "Ramesh Shrestha";
     public string speakerRole = "Local Resident";
@@ -20,79 +18,75 @@ public class NPCSpeech : MonoBehaviour
     [Tooltip("Optional portrait image of the NPC.")]
     public Sprite portrait;
 
-    // ── Interaction ───────────────────────────────────────────────────────────
+    [Tooltip("Historical location image shown in the speech bubble.")]
+    public Sprite locationImage;
+
+    [Tooltip("Caption for the location image, e.g. 'Old Dharahara, 1934'")]
+    public string locationCaption = "";
 
     [Header("Interaction")]
     public float interactRange = 4f;
     public LayerMask npcLayer;
 
-    // ── Shared Speech Bubble UI ───────────────────────────────────────────────
-
     [Header("Speech Bubble UI (shared across all NPCs)")]
-    public GameObject      speechBubbleRoot;
+    public GameObject speechBubbleRoot;
     public TextMeshProUGUI bubbleSpeakerName;
     public TextMeshProUGUI bubbleSpeakerRole;
     public TextMeshProUGUI bubbleQuoteText;
-    public Image           bubblePortrait;
-    public GameObject      portraitObj;       // Parent holding portrait image
-    public Button          bubbleCloseButton;
+    public Image bubblePortrait;
+    public GameObject portraitObj;
+    public Button bubbleCloseButton;
+
+    [Header("Location Image UI")]
+    [Tooltip("Drag the LocationImage UI Image component here.")]
+    public Image bubbleLocationImage;
+    [Tooltip("Drag the LocationCaption TMP here.")]
+    public TextMeshProUGUI bubbleLocationCaption;
+    [Tooltip("Parent GameObject holding LocationImage and LocationCaption.")]
+    public GameObject locationImageSection;
 
     [Header("Interaction Prompt")]
-    public GameObject      promptRoot;
+    public GameObject promptRoot;
     public TextMeshProUGUI promptText;
 
-    // ── Private ───────────────────────────────────────────────────────────────
-
-    private Camera   _cam;
-    private bool     _open;
+    private Camera _cam;
+    private bool _open;
     private static NPCSpeech _currentOpen;
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     void Start()
     {
         _cam = Camera.main;
-
         if (speechBubbleRoot != null) speechBubbleRoot.SetActive(false);
-        if (promptRoot       != null) promptRoot.SetActive(false);
-        if (bubbleCloseButton!= null) bubbleCloseButton.onClick.AddListener(CloseBubble);
+        if (promptRoot != null) promptRoot.SetActive(false);
+        if (locationImageSection != null) locationImageSection.SetActive(false);
+        if (bubbleCloseButton != null) bubbleCloseButton.onClick.AddListener(CloseBubble);
     }
 
     void Update()
     {
         HandlePrompt();
-
         if (Input.GetKeyDown(KeyCode.E))
             TrySpeak();
     }
 
-    // ── Crosshair prompt ──────────────────────────────────────────────────────
-
     void HandlePrompt()
     {
         if (promptRoot == null || _cam == null || _open) return;
-
-        Ray  ray  = _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Ray ray = _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         bool aimed = Physics.Raycast(ray, out RaycastHit hit, interactRange)
                      && hit.collider != null
                      && hit.collider.gameObject == gameObject;
-
         promptRoot.SetActive(aimed);
-
         if (aimed && promptText != null)
             promptText.text = $"[E]  Talk to {speakerName}";
     }
 
-    // ── Speech bubble ─────────────────────────────────────────────────────────
-
     void TrySpeak()
     {
         if (_open || _cam == null) return;
-
         Ray ray = _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         if (!Physics.Raycast(ray, out RaycastHit hit, interactRange)) return;
         if (hit.collider.gameObject != gameObject) return;
-
         OpenBubble();
     }
 
@@ -105,20 +99,30 @@ public class NPCSpeech : MonoBehaviour
 
         if (bubbleSpeakerName != null) bubbleSpeakerName.text = speakerName;
         if (bubbleSpeakerRole != null) bubbleSpeakerRole.text = speakerRole;
-        if (bubbleQuoteText   != null) bubbleQuoteText.text   = $"\"{quote}\"";
+        if (bubbleQuoteText != null) bubbleQuoteText.text = $"\"{quote}\"";
 
+        // Portrait (optional)
         bool hasPortrait = portrait != null;
-        if (portraitObj    != null) portraitObj.SetActive(hasPortrait);
+        if (portraitObj != null) portraitObj.SetActive(hasPortrait);
         if (hasPortrait && bubblePortrait != null) bubblePortrait.sprite = portrait;
+
+        // Location image (optional)
+        bool hasLocationImage = locationImage != null;
+        if (locationImageSection != null) locationImageSection.SetActive(hasLocationImage);
+        if (hasLocationImage)
+        {
+            if (bubbleLocationImage != null) bubbleLocationImage.sprite = locationImage;
+            if (bubbleLocationCaption != null) bubbleLocationCaption.text = locationCaption;
+        }
 
         speechBubbleRoot.SetActive(true);
         if (promptRoot != null) promptRoot.SetActive(false);
 
-        _open        = true;
+        _open = true;
         _currentOpen = this;
 
         Cursor.lockState = CursorLockMode.None;
-        Cursor.visible   = true;
+        Cursor.visible = true;
     }
 
     public void CloseBubble()
@@ -126,8 +130,14 @@ public class NPCSpeech : MonoBehaviour
         if (speechBubbleRoot != null) speechBubbleRoot.SetActive(false);
         _open = false;
         if (_currentOpen == this) _currentOpen = null;
+        StartCoroutine(LockCursorNextFrame());
+    }
 
+    IEnumerator LockCursorNextFrame()
+    {
+        yield return null;
+        yield return null;
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible   = false;
+        Cursor.visible = false;
     }
 }

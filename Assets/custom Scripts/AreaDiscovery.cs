@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 
-
 public class AreaDiscoveryManager : MonoBehaviour
 {
     public static AreaDiscoveryManager Instance { get; private set; }
@@ -35,15 +34,10 @@ public class AreaDiscoveryManager : MonoBehaviour
     [Tooltip("Must match the exact number of DiscoverableArea zones in the scene.")]
     public int totalAreas = 7;
 
-    // ── State ─────────────────────────────────────────────────────────────────
-
     private int _discovered = 0;
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     void Awake()
     {
-        // Simple singleton so DiscoverableArea can find this easily
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
@@ -51,16 +45,13 @@ public class AreaDiscoveryManager : MonoBehaviour
     void Start()
     {
         if (areaIndicatorText != null) areaIndicatorText.gameObject.SetActive(false);
-        if (completionPopup   != null) completionPopup.SetActive(false);
+        if (completionPopup != null) completionPopup.SetActive(false);
         if (completionCloseButton != null)
             completionCloseButton.onClick.AddListener(CloseCompletion);
 
         UpdateScoreLabel();
     }
 
-    // ── Called by DiscoverableArea ────────────────────────────────────────────
-
-    /// <summary>Called by a DiscoverableArea when the player enters it for the first time.</summary>
     public void RegisterDiscovery(string areaName)
     {
         _discovered++;
@@ -70,8 +61,6 @@ public class AreaDiscoveryManager : MonoBehaviour
         if (_discovered >= totalAreas)
             StartCoroutine(ShowCompletion());
     }
-
-    // ── UI helpers ────────────────────────────────────────────────────────────
 
     void UpdateScoreLabel()
     {
@@ -90,15 +79,12 @@ public class AreaDiscoveryManager : MonoBehaviour
     {
         areaIndicatorText.text = $"📍  {areaName}";
         areaIndicatorText.gameObject.SetActive(true);
-
         yield return new WaitForSeconds(indicatorDuration);
-
         areaIndicatorText.gameObject.SetActive(false);
     }
 
     IEnumerator ShowCompletion()
     {
-        // Small delay so the last area indicator is visible first
         yield return new WaitForSeconds(1.5f);
 
         if (completionPopup != null) completionPopup.SetActive(true);
@@ -109,17 +95,21 @@ public class AreaDiscoveryManager : MonoBehaviour
                 "Thank you for walking through the story of Dharahara.\n" +
                 "Its legacy lives on.";
 
-        // Unlock cursor so player can click the close button
         Cursor.lockState = CursorLockMode.None;
-        Cursor.visible   = true;
+        Cursor.visible = true;
     }
 
     void CloseCompletion()
     {
         if (completionPopup != null) completionPopup.SetActive(false);
+        StartCoroutine(LockCursorNextFrame());
+    }
 
+    IEnumerator LockCursorNextFrame()
+    {
+        yield return null;
+        yield return null;
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible   = false;
+        Cursor.visible = false;
     }
 }
-
